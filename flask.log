@@ -1,0 +1,76 @@
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [06/Dec/2025 17:40:35] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[33mGET /icon.webp HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "GET /cmp_top.svg HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "GET /cmp.svg HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[36mGET /bg1.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[36mGET /cmp.svg HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[36mGET /cmp_top.svg HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:40:35] "[36mGET /bg1.webp HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:40:45] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:45] "GET /api/overview/stats HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:47] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:47] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:47] "GET /api/scenarios/next-code HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:40:47] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:52] "POST /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/scenarios/next-code HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:41:54] "GET /api/overview/stats HTTP/1.1" 200 -
+[2025-12-06 17:41:54,170] ERROR in app: Exception on /api/scenarios/1/notes [GET]
+Traceback (most recent call last):
+  File "/Users/ayonbandyopadhyay/Documents/PGP/Html_Dashboard/scav6.9.4/.venv/lib/python3.12/site-packages/flask/app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ayonbandyopadhyay/Documents/PGP/Html_Dashboard/scav6.9.4/.venv/lib/python3.12/site-packages/flask/app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ayonbandyopadhyay/Documents/PGP/Html_Dashboard/scav6.9.4/.venv/lib/python3.12/site-packages/flask/app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ayonbandyopadhyay/Documents/PGP/Html_Dashboard/scav6.9.4/.venv/lib/python3.12/site-packages/flask/app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ayonbandyopadhyay/Documents/PGP/Html_Dashboard/scav6.9.4/app.py", line 1172, in list_notes_for_scenario
+    replies = ScenarioReply.query.filter(ScenarioReply.note_id.in_(note_ids)).order_by(ScenarioReply.created_at.asc()).all()
+              ^^^^^^^^^^^^^
+NameError: name 'ScenarioReply' is not defined
+127.0.0.1 - - [06/Dec/2025 17:41:54] "[35m[1mGET /api/scenarios/1/notes HTTP/1.1[0m" 500 -
+127.0.0.1 - - [06/Dec/2025 17:42:02] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:17] "POST /api/scenarios/1/upload-data HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:20] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:20] "GET /scenario_asset/SCN-0001-analysis-of-views-html.html HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:20] "[33mGET /scenario_asset/chart.umd.min.js HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 17:42:20] "GET /api/scenarios/1/analysis/latest HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:24] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 17:42:32] "[36mGET / HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:42:32] "GET /api/profile/1 HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:32] "[36mGET /cmp_top.svg HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:42:32] "[36mGET /cmp.svg HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:42:32] "GET /api/overview/stats HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:36] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:36] "GET /api/scenarios/next-code HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:36] "GET /api/users HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:36] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:39] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:49] "GET /api/scenarios HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:49] "[36mGET /scenario_asset/SCN-0001-analysis-of-views-html.html HTTP/1.1[0m" 304 -
+127.0.0.1 - - [06/Dec/2025 17:42:49] "[33mGET /scenario_asset/chart.umd.min.js HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 17:42:49] "GET /api/scenarios/1/analysis/latest HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 17:42:58] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 17:46:27] "GET /api/scenarios/1/analysis/latest HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 18:00:51] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 18:00:58] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 18:01:03] "POST /api/logout HTTP/1.1" 200 -
+127.0.0.1 - - [06/Dec/2025 18:01:03] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 18:01:05] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 18:05:56] "[33mGET /scenario_asset/index.html HTTP/1.1[0m" 404 -
+127.0.0.1 - - [06/Dec/2025 18:13:54] "POST /api/scenarios HTTP/1.1" 200 -

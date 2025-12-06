@@ -1,0 +1,12 @@
+sales_scenario_app_v4/
+├── app.py
+├── requirements.txt
+├── static/
+│   ├── index.html              # login + scenario hub + user management
+│   ├── default_scenario.html   # default dashboard
+│   ├── chart.umd.min.js        # Chart.js (replace with real file)
+│   └── bg1.jpg                 # login background image (replace)
+└── scenario_logic/
+    ├── __init__.py
+    ├── default_scenario.py         # default analysis logic
+    └── template_custom_scenario.py # template for new scenarios

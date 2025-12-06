@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scenario Dashboard - Default</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Poppins", sans-serif;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+    body {
+      background: radial-gradient(circle at top left, #e0f2fe, #fee2e2);
+      color: #111827;
+    }
+    .page {
+      width: 100vw;
+      height: 100vh;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      box-shadow: 0 4px 14px rgba(148, 163, 184, 0.6);
+      padding: 8px 10px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .heading-accent {
+      background: linear-gradient(90deg, #ef4444, #2563eb);
+      -webkit-background-clip: text;
+      color: transparent;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+    .subheading {
+      font-size: 0.8rem;
+      color: #4b5563;
+    }
+    .filters {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .filters label {
+      font-size: 0.78rem;
+      color: #374151;
+      margin-right: 3px;
+    }
+    .filters select,
+    .filters input {
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      background: #f3f4f6;
+      font-size: 0.8rem;
+      outline: none;
+    }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      background: linear-gradient(135deg, #2563eb, #ef4444);
+      color: #ffffff;
+      box-shadow: 0 3px 8px rgba(107, 114, 128, 0.7);
+      white-space: nowrap;
+    }
+    .btn-outline {
+      background: #ffffff;
+      color: #1f2937;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      box-shadow: none;
+    }
+    .layout-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 8px;
+      min-height: 0;
+    }
+    @media (max-width: 900px) {
+      .layout-main {
+        grid-template-columns: 1fr;
+      }
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 6px;
+    }
+    @media (max-width: 900px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .kpi-card {
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: linear-gradient(
+        135deg,
+        rgba(248, 113, 113, 0.12),
+        rgba(59, 130, 246, 0.14)
+      );
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      font-size: 0.78rem;
+    }
+    .kpi-label {
+      color: #4b5563;
+      margin-bottom: 2px;
+    }
+    .kpi-value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .chart-box {
+      width: 100%;
+      height: 100%;
+      min-height: 220px;
+    }
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .error-text {
+      color: #b91c1c;
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="glass header">
+      <div class="header-left">
+        <div class="heading-accent" id="scenarioTitle">Scenario Dashboard</div>
+        <div class="subheading" id="scenarioSubtitle"></div>
+      </div>
+      <div class="filters">
+        <div>
+          <label for="storeSelect">Store</label>
+          <select id="storeSelect"></select>
+        </div>
+        <div>
+          <label for="dateFrom">From</label>
+          <input type="date" id="dateFrom" />
+        </div>
+        <div>
+          <label for="dateTo">To</label>
+          <input type="date" id="dateTo" />
+        </div>
+        <button class="btn" id="applyFiltersBtn">Apply</button>
+        <button class="btn btn-outline" id="downloadBtn">Download Filtered</button>
+        <button class="btn btn-outline" id="backBtn">← Back</button>
+      </div>
+    </div>
+
+    <div class="glass">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Sales</div>
+          <div class="kpi-value" id="kpiTotalSales">₹ – Cr</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Weekly Sales</div>
+          <div class="kpi-value" id="kpiAvgSales">₹ – Cr</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Number of Weeks</div>
+          <div class="kpi-value" id="kpiWeeks">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layout-main">
+      <div class="glass">
+        <div style="font-size:0.8rem;margin-bottom:4px;">Weekly Sales Trend (₹ Cr)</div>
+        <div class="chart-box">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+      <div class="glass">
+        <div style="font-size:0.8rem;margin-bottom:4px;">Store Share (Total Sales, ₹ Cr)</div>
+        <div class="chart-box">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-text" id="errorBox" style="display:none;"></div>
+  </div>
+
+  <script src="chart.umd.min.js"></script>
+  <script>
+    let scenarioId = null;
+    let scenarioMeta = null;
+    let baseTrend = [];
+    let filteredTrend = [];
+    let trendChart = null;
+    let pieChart = null;
+
+    function parseDMY(dmy) {
+      const [dd, mm, yyyy] = dmy.split("-");
+      return new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
+    }
+
+    function formatCr(n, decimals = 2) {
+      if (isNaN(n) || n === null) return "–";
+      const cr = n / 10000000;
+      return cr.toLocaleString("en-IN", {
+        maximumFractionDigits: decimals,
+        minimumFractionDigits: decimals
+      });
+    }
+
+    function showError(msg) {
+      const box = document.getElementById("errorBox");
+      box.textContent = msg;
+      box.style.display = "block";
+    }
+
+    function clearError() {
+      const box = document.getElementById("errorBox");
+      box.textContent = "";
+      box.style.display = "none";
+    }
+
+    function populateStoreSelect() {
+      const sel = document.getElementById("storeSelect");
+      sel.innerHTML = "";
+
+      const optAll = document.createElement("option");
+      optAll.value = "ALL";
+      optAll.textContent = "All Stores";
+      sel.appendChild(optAll);
+
+      const stores = [...new Set(baseTrend.map(r => r.store))].sort((a, b) => a - b);
+      stores.forEach(s => {
+        const o = document.createElement("option");
+        o.value = String(s);
+        o.textContent = "Store " + s;
+        sel.appendChild(o);
+      });
+      sel.value = "ALL";
+    }
+
+    function initDateFilters() {
+      if (!baseTrend.length) return;
+      const dates = baseTrend.map(r => parseDMY(r.date));
+      const minD = new Date(Math.min(...dates));
+      const maxD = new Date(Math.max(...dates));
+
+      function fmt(d) {
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${d.getFullYear()}-${m}-${day}`;
+      }
+      document.getElementById("dateFrom").value = fmt(minD);
+      document.getElementById("dateTo").value = fmt(maxD);
+    }
+
+    function applyFilters() {
+      if (!baseTrend.length) return;
+
+      const storeVal = document.getElementById("storeSelect").value;
+      const fromVal = document.getElementById("dateFrom").value;
+      const toVal = document.getElementById("dateTo").value;
+
+      const fromDate = fromVal ? new Date(fromVal) : null;
+      const toDate = toVal ? new Date(toVal) : null;
+
+      filteredTrend = baseTrend.filter(rec => {
+        let ok = true;
+        const d = parseDMY(rec.date);
+        if (fromDate && d < fromDate) ok = false;
+        if (toDate && d > toDate) ok = false;
+        if (storeVal !== "ALL" && rec.store !== Number(storeVal)) ok = false;
+        return ok;
+      });
+
+      updateKpis();
+      renderCharts();
+    }
+
+    function updateKpis() {
+      const totalSales = filteredTrend.reduce((sum, r) => sum + (r.weekly_sales || 0), 0);
+      const weeks = filteredTrend.length;
+      const avgSales = weeks ? totalSales / weeks : 0;
+
+      document.getElementById("kpiTotalSales").textContent =
+        "₹ " + formatCr(totalSales) + " Cr";
+      document.getElementById("kpiAvgSales").textContent =
+        "₹ " + formatCr(avgSales) + " Cr";
+      document.getElementById("kpiWeeks").textContent =
+        weeks.toLocaleString("en-IN");
+    }
+
+    function renderCharts() {
+      const ctxTrend = document.getElementById("trendChart").getContext("2d");
+      const ctxPie = document.getElementById("pieChart").getContext("2d");
+
+      const labels = filteredTrend.map(r => r.date);
+      const dataCr = filteredTrend.map(r => r.weekly_sales / 1e7);
+
+      if (trendChart) trendChart.destroy();
+      trendChart = new Chart(ctxTrend, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Weekly Sales (₹ Cr)",
+              data: dataCr,
+              tension: 0.25,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              ticks: {
+                maxTicksLimit: 8
+              }
+            }
+          }
+        }
+      });
+
+      const byStore = {};
+      filteredTrend.forEach(r => {
+        if (!byStore[r.store]) byStore[r.store] = 0;
+        byStore[r.store] += r.weekly_sales;
+      });
+      const storeKeys = Object.keys(byStore).sort((a, b) => Number(a) - Number(b));
+      const pieVals = storeKeys.map(k => byStore[k] / 1e7);
+
+      if (pieChart) pieChart.destroy();
+      pieChart = new Chart(ctxPie, {
+        type: "pie",
+        data: {
+          labels: storeKeys.map(k => "Store " + k),
+          datasets: [
+            {
+              data: pieVals
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    function downloadFiltered() {
+      const blob = new Blob(
+        [JSON.stringify(filteredTrend, null, 2)],
+        { type: "application/json" }
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "filtered_scenario_data.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function fetchAnalysis() {
+      try {
+        const res = await fetch(`/api/scenarios/${scenarioId}/analysis/latest`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          showError(data.message || "Error running analysis");
+          return;
+        }
+
+        const analysis = data.analysis || {};
+        const trend = analysis.trend || [];
+
+        baseTrend = trend.map(r => ({
+          date: r.date,
+          store: Number(r.store),
+          weekly_sales: Number(r.weekly_sales),
+        })).filter(r => r.date && !isNaN(r.store));
+
+        if (!baseTrend.length) {
+          showError("No trend data available from analysis.");
+          return;
+        }
+
+        populateStoreSelect();
+        initDateFilters();
+        filteredTrend = baseTrend.slice();
+        updateKpis();
+        renderCharts();
+      } catch (e) {
+        showError("Error fetching analysis: " + e.message);
+      }
+    }
+
+    function initScenarioMeta() {
+      try {
+        scenarioId = localStorage.getItem("currentScenarioIdForDashboard");
+        if (!scenarioId) {
+          showError("No scenario selected. Please go back and choose a scenario.");
+          return false;
+        }
+        const metaStr = localStorage.getItem("scenarioMeta_" + scenarioId);
+        scenarioMeta = metaStr ? JSON.parse(metaStr) : null;
+
+        if (scenarioMeta) {
+          document.getElementById("scenarioTitle").textContent =
+            `${scenarioMeta.scenario_code || ""} - ${scenarioMeta.name || "Scenario"}`;
+          document.getElementById("scenarioSubtitle").textContent =
+            `HTML: ${scenarioMeta.html_file || ""} · Python: ${scenarioMeta.analysis_module || "default_scenario"}`;
+        }
+        return true;
+      } catch (e) {
+        showError("Error loading scenario meta: " + e.message);
+        return false;
+      }
+    }
+
+    document.getElementById("applyFiltersBtn").addEventListener("click", () => {
+      clearError();
+      applyFilters();
+    });
+    document.getElementById("downloadBtn").addEventListener("click", downloadFiltered);
+    document.getElementById("backBtn").addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+
+    (function init() {
+      if (initScenarioMeta()) {
+        fetchAnalysis();
+      }
+    })();
+  </script>
+</body>
+</html>

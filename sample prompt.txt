@@ -1,0 +1,272 @@
+You are helping me build a new “scenario” for my existing Flask-based Scenario Hub application.
+
+IMPORTANT: FOLLOW ALL OF THESE RULES EXACTLY.  
+DO NOT IGNORE ANY PART.  
+DO NOT CHANGE THE OUTPUT ORDER.  
+DO NOT ADD ANY EXPLANATION OUTSIDE THE TWO CODE BLOCKS I REQUEST.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1) PROJECT CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+My Scenario Hub application already works with this architecture:
+
+BACKEND (Flask):
+- Manages scenarios (name, scenario code, linked HTML file, linked Python logic file).
+- Users upload JSON data for a scenario.
+- Backend calls the scenario’s Python module’s `analyze(data)` function.
+- The result is stored.
+- Dashboard fetch URL:
+  GET /api/scenarios/<scenario_id>/analysis/latest  
+  RETURNS:
+  {
+    "success": true/false,
+    "scenario_id": ...,
+    "analysis": { ... }  ← whatever analyze(data) returns
+  }
+
+FRONTEND HUB (index.html):
+- User chooses a scenario → hub saves:
+    - localStorage["currentScenarioIdForDashboard"]
+    - localStorage["scenarioMeta_<id>"] = { scenario_code, name, html_file, analysis_module }
+- Then opens that scenario’s dashboard HTML (the file you will generate).
+
+SCENARIO FILES YOU MUST GENERATE:
+1) logic.py  
+   - Located in: scenario_logic/<scenario_code_folder>/logic.py
+   - Contains analyze(data) and helpers.
+
+2) dashboard.html  
+   - Located in: static/<scenario_code_folder>/dashboard.html  
+   - Pure client-side HTML + JS.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SYSTEM CONSTRAINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ The target machine has NO INTERNET.  
+✘ Do NOT use CDN assets.  
+✔ You MUST include Chart.js locally as:
+
+    <script src="chart.umd.min.js"></script>
+
+✔ Do NOT import pandas, numpy or other external libs. ONLY Python standard library is allowed.
+
+✔ HTML must use a **light theme**, red–blue colour palette, subtle **glassmorphism**.  
+✔ Buttons: pill-shaped, gradient for primary buttons.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2) PYTHON ANALYSIS RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST output a Python file named **logic.py**:
+
+- It must define EXACTLY one public function:
+
+    def analyze(data):
+        ...
+
+- `data` will be a list of dictionaries parsed from the uploaded JSON.
+
+- The function MUST return:
+
+    {
+        "key_metrics": {...},  ← REQUIRED
+        ... other fields ...
+    }
+
+- key_metrics MUST be a dictionary with string keys and number/string values.
+
+- You may include additional fields like:
+    - "accounts"
+    - "aggregates"
+    - "chart_data"
+    etc.
+
+- You may implement helper functions like `_to_float`, `_normalize_str`, etc.
+
+STRICT PYTHON RESTRICTIONS:
+✘ NO file I/O  
+✘ NO test code  
+✘ NO `if __name__ == "__main__":`  
+✘ NO pandas / numpy  
+✔ Only Python standard library  
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3) DASHBOARD HTML RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST output **dashboard.html** with these rules:
+
+1) Include local Chart.js ONLY:
+
+   <script src="chart.umd.min.js"></script>
+
+2) Read scenario id + scenario metadata from localStorage:
+
+   const sidStr = localStorage.getItem("currentScenarioIdForDashboard");
+   const scenarioId = sidStr ? parseInt(sidStr, 10) : null;
+
+   const metaStr = localStorage.getItem("scenarioMeta_" + scenarioId);
+   if (metaStr) {
+     const meta = JSON.parse(metaStr);
+     document.getElementById("scenarioTitle").textContent =
+       (meta.scenario_code + " - " + meta.name);
+   }
+
+3) Fetch analysis JSON:
+
+   fetch("/api/scenarios/" + scenarioId + "/analysis/latest")
+     .then(r => r.json())
+     .then(res => {
+       const analysis = res.analysis || {};
+       // Use analysis.key_metrics, analysis.accounts, etc.
+     })
+
+4) HTML structure:
+
+TOP BAR:
+- Left: Scenario title  
+- Right:
+    - Back to Menu
+    - Logout
+
+Back button:
+function backToMenu() {
+  window.location.href = "index.html";
+}
+
+Logout button:
+function logoutFromDashboard() {
+  localStorage.clear();
+  fetch("/api/logout", { method:"POST" }).finally(() => {
+    window.location.href = "index.html";
+  });
+}
+
+LAYOUT:
+Two columns:
+- Left panel → Filters
+- Right panel → KPIs + Charts
+
+KPI cards (glassmorphism).
+Charts in 2×2 grid.
+
+FILTERS must match exactly what is defined in SCENARIO REQUIREMENTS.
+
+CHARTS must be built using Chart.js.  
+When filters change, JS MUST re-compute chart data using filtered `accounts` array.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4) SCENARIO REQUIREMENTS (FILLED EXAMPLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1) SCENARIO NAME:
+   Credit Card NPA Portfolio Risk
+
+2) INPUT JSON STRUCTURE:
+   Each record in uploaded JSON is one credit card account snapshot with fields:
+
+   - Account_ID (str)
+   - Customer_ID (str)
+   - Region (str)
+   - Segment (str)
+   - Product (str)
+   - Limit (float)
+   - Outstanding (float)
+   - NPA_Flag (int/bool)
+   - Days_Past_Due (int)
+   - Bucket (str)
+   - Chargeoff_Flag (int/bool)
+   - Open_Date (str dd-mm-YYYY)
+   - Snapshot_Date (str dd-mm-YYYY)
+
+3) KEY METRICS REQUIRED (RETURN EXACT KEYS):
+
+   - "Total Outstanding (₹ Cr)"
+   - "NPA Outstanding (₹ Cr)"
+   - "NPA Percentage (%)"
+   - "Number of Accounts"
+   - "Number of NPA Accounts"
+   - "90+ DPD Outstanding (₹ Cr)"
+
+4) FILTERS REQUIRED:
+
+   Filter 1: Region
+     - Dropdown
+     - Default: “All Regions”
+     - Source: unique Region values
+
+   Filter 2: Segment
+     - Dropdown
+     - Default: “All Segments”
+
+   Filter 3: Product
+     - Dropdown
+     - Default: “All Products”
+
+   Filter 4: NPA Status
+     Options:
+       - All
+       - Only NPA
+       - Only Standard
+
+   Filtering must occur client-side in JavaScript.
+
+5) CHARTS REQUIRED:
+
+   CHART 1 – Region-wise NPA Outstanding
+     - ID: region_npa_bar
+     - Type: bar
+     - X: Region
+     - Y: NPA Outstanding (₹ Cr)
+     - Sort: descending
+     - Tooltip: Region + value
+
+   CHART 2 – Segment-wise NPA Share
+     - ID: segment_share_pie
+     - Type: pie
+     - Labels: Segment
+     - Values: NPA Outstanding (₹ Cr)
+
+   CHART 3 – DPD Bucket Outstanding
+     - ID: dpd_bucket_bar
+     - Type: bar
+     - X: Bucket
+     - Y: Outstanding (₹ Cr)
+     - Bucket order forced:
+       ["0", "1-30", "31-60", "61-90", "90+"]
+
+   CHART 4 – Region-wise NPA Percentage
+     - ID: region_npa_percentage_bar
+     - Type: bar
+     - Y: percentage (0–100%)
+
+6) SPECIAL RULES:
+
+   - Rupee → crore: divide by 1e7, 2 decimals
+   - Missing values:
+     - missing numeric → 0
+     - missing Region/Segment/Product/Bucket → "Unknown"
+     - missing NPA_Flag → 0
+   - key_metrics must be unfiltered snapshot view.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5) YOUR OUTPUT FORMAT (STRICT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST respond with EXACTLY TWO code blocks — nothing else:
+
+FIRST CODE BLOCK:
+```python
+# logic.py
+# full python file here
+
+SECOND CODE BLOCK
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html>...</html>
+
+DO NOT SEND ANY OTHER TEXT OUTSIDE THESE TWO BLOCKS.
+DO NOT EXPLAIN ANYTHING.
+ONLY SEND THE TWO FILES.

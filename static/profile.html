@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Scenario Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        :root {
+            --primary: linear-gradient(135deg, #f97373, #3b82f6);
+            --primary-solid: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-main: #f3f6fb;
+            --bg-panel: rgba(255, 255, 255, 0.95);
+            --text-main: #0f172a;
+            --text-muted: #6b7280;
+            --border-color: rgba(148, 163, 184, 0.25);
+            --shadow: 0 18px 35px rgba(15, 23, 42, 0.08);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(239, 246, 255, 0.95));
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: var(--primary);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .back-btn {
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: none;
+            background: var(--bg-panel);
+            color: var(--text-main);
+            cursor: pointer;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary-solid);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 30px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: var(--bg-panel);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .profile-photo-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--primary-solid);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(249, 115, 115, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-photo-placeholder {
+            font-size: 48px;
+        }
+
+        .upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+
+        .profile-photo-container:hover .upload-overlay {
+            opacity: 1;
+        }
+
+        .upload-overlay-icon {
+            color: white;
+            font-size: 24px;
+        }
+
+        .profile-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .profile-role {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .profile-email {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            word-break: break-all;
+            margin-bottom: 16px;
+        }
+
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            cursor: pointer;
+            text-align: left;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary-solid);
+        }
+
+        .menu-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--primary-solid);
+            color: var(--primary-solid);
+        }
+
+        .menu-icon {
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            background: var(--bg-panel);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 24px;
+            font-weight: 600;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: rgba(241, 245, 249, 0.8);
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-solid);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        input:disabled {
+            background: rgba(241, 245, 249, 0.5);
+            cursor: not-allowed;
+        }
+
+        .input-help {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-solid);
+            border: 1px solid var(--primary-solid);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert.show {
+            display: flex;
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .password-requirement {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            padding: 12px;
+            background: rgba(241, 245, 249, 0.8);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-solid);
+        }
+
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 4px 0;
+        }
+
+        .requirement-check {
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+        }
+
+        .requirement-check.met {
+            color: var(--success);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-panel);
+            border-radius: 18px;
+            padding: 30px;
+            max-width: 400px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👤 User Profile</h1>
+            <button class="back-btn" onclick="goBack()">← Back to Dashboard</button>
+        </div>
+
+        <div class="content">
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <div class="profile-card">
+                    <div class="profile-photo-container" id="profilePhotoContainer" onclick="triggerPhotoUpload()">
+                        <div id="profilePhotoDisplay" class="profile-photo-placeholder">👤</div>
+                        <div class="upload-overlay">
+                            <div class="upload-overlay-icon">📷</div>
+                        </div>
+                    </div>
+                    <input type="file" id="photoInput" class="file-input" accept="image/*" onchange="handlePhotoUpload(event)">
+                    
+                    <div class="profile-name" id="profileName">Loading...</div>
+                    <div class="profile-role" id="profileRole">-</div>
+                    <div class="profile-email" id="profileEmail">-</div>
+                    <button class="btn btn-secondary" onclick="deleteProfilePhoto()" style="width: 100%; margin-top: 8px;">🗑️ Remove Photo</button>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="main-content">
+                <div id="alert" class="alert"></div>
+
+                <!-- EDIT PERSONAL INFO -->
+                <section id="personalInfoSection">
+                    <h2 class="section-title">Personal Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" placeholder="Enter first name">
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" placeholder="Enter last name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="Enter email address">
+                        <div class="input-help">We'll use this to send you important updates</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" placeholder="Enter phone number">
+                    </div>
+                    <div class="button-group">
+                        <button id="editPersonalBtn" class="btn btn-secondary" onclick="enableProfileEdit()">✏️ Edit</button>
+                        <button id="savePersonalBtn" class="btn btn-primary" onclick="savePersonalInfo()" disabled>💾 Save Changes</button>
+                    </div>
+                </section>
+
+                <!-- CHANGE PASSWORD -->
+                <section id="passwordSection" style="margin-top: 40px;">
+                    <h2 class="section-title">Security</h2>
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password" oninput="checkPasswordRequirements()">
+                        <div class="password-requirement">
+                            <div class="requirement-item">
+                                <span class="requirement-check" id="req-length">✓</span>
+                                <span>At least 6 characters</span>
+                            </div>
+                            <div class="requirement-item">
+                                <span class="requirement-check" id="req-match">✓</span>
+                                <span>Matches with confirm password</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password" oninput="checkPasswordRequirements()">
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="savePassword()">🔐 Update Password</button>
+                        <button class="btn btn-secondary" onclick="clearPasswordForm()">Clear</button>
+                    </div>
+                </section>
+
+                <!-- ACCOUNT INFO (READ ONLY) -->
+                <section style="margin-top: 40px;">
+                    <h2 class="section-title">Account Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="username" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <input type="text" id="role" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Account Created</label>
+                            <input type="text" id="createdAt" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Updated</label>
+                            <input type="text" id="updatedAt" readonly>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Delete Profile Photo?</div>
+            <p>This action cannot be undone. Your profile photo will be permanently removed.</p>
+            <div class="modal-buttons">
+                <button onclick="closeConfirmModal()" class="btn btn-secondary">Cancel</button>
+                <button onclick="confirmDeletePhoto()" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        let currentProfile = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get user ID from URL or session
+            const params = new URLSearchParams(window.location.search);
+            // Try URL parameter first, then look for the logged-in user stored as 'user' in localStorage
+            currentUserId = params.get('user_id') || JSON.parse(localStorage.getItem('user'))?.id;
+            
+            if (!currentUserId) {
+                showAlert('Error: User ID not found', 'error');
+                return;
+            }
+            
+            loadProfile();
+        });
+
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠'
+            };
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            alert.innerHTML = `<div class="alert-icon">${icons[type]}</div><div>${message}</div>`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 4000);
+        }
+
+        function loadProfile() {
+            fetch(`/api/profile/${currentUserId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        currentProfile = data.profile;
+                        displayProfile();
+                    } else {
+                        showAlert('Failed to load profile: ' + data.message, 'error');
+                    }
+                })
+                .catch(err => showAlert('Error loading profile', 'error'));
+        }
+
+        function displayProfile() {
+            const p = currentProfile;
+            
+            // Sidebar
+            const displayName = (p.first_name || '') + (p.last_name ? ' ' + p.last_name : '') || p.username;
+            document.getElementById('profileName').textContent = displayName;
+            document.getElementById('profileRole').textContent = p.role.charAt(0).toUpperCase() + p.role.slice(1);
+            document.getElementById('profileEmail').textContent = p.email || 'No email set';
+            
+            // Profile photo
+            const photoDisplay = document.getElementById('profilePhotoDisplay');
+            if (p.profile_photo) {
+                photoDisplay.innerHTML = `<img src="${p.profile_photo}" alt="Profile Photo">`;
+            } else {
+                photoDisplay.textContent = '👤';
+            }
+            
+            // Form fields
+            document.getElementById('firstName').value = p.first_name || '';
+            document.getElementById('lastName').value = p.last_name || '';
+            document.getElementById('email').value = p.email || '';
+            document.getElementById('phone').value = p.phone || '';
+            document.getElementById('username').value = p.username;
+            document.getElementById('role').value = p.role.charAt(0).toUpperCase() + p.role.slice(1);
+            document.getElementById('createdAt').value = new Date(p.created_at).toLocaleString();
+            document.getElementById('updatedAt').value = new Date(p.updated_at).toLocaleString();
+                // Ensure personal info fields are readonly until user clicks Edit
+                disableProfileEdit();
+        }
+
+        function savePersonalInfo() {
+            const requestData = {
+                first_name: document.getElementById('firstName').value.trim(),
+                last_name: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim()
+            };
+
+            if (!requestData.email) {
+                showAlert('Email is required', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('savePersonalBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+            fetch(`/api/profile/${currentUserId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+            .then(res => {
+                // Log HTTP status for debugging
+                console.log('Profile update response status:', res.status);
+                return res.json();
+            })
+            .then(respJson => {
+                console.log('Profile update response JSON:', respJson);
+                if (respJson && respJson.success) {
+                    currentProfile = respJson.profile;
+                    displayProfile();
+                    showAlert('Changes saved successfully', 'success');
+                    // After successful save, lock the fields again
+                    disableProfileEdit();
+                } else {
+                    showAlert((respJson && respJson.message) || 'Failed to save profile', 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Error saving profile:', err);
+                showAlert('Error saving profile', 'error');
+            })
+            .finally(() => {
+                btn.classList.remove('loading');
+                btn.innerHTML = '💾 Save Changes';
+            });
+        }
+
+        function enableProfileEdit() {
+            ['firstName','lastName','email','phone'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.removeAttribute('disabled');
+            });
+            document.getElementById('savePersonalBtn').removeAttribute('disabled');
+            document.getElementById('editPersonalBtn').setAttribute('disabled','');
+        }
+
+        function disableProfileEdit() {
+            ['firstName','lastName','email','phone'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.setAttribute('disabled','');
+            });
+            const saveBtn = document.getElementById('savePersonalBtn');
+            if (saveBtn) saveBtn.setAttribute('disabled','');
+            const editBtn = document.getElementById('editPersonalBtn');
+            if (editBtn) editBtn.removeAttribute('disabled');
+        }
+
+        function checkPasswordRequirements() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            const lengthMet = newPassword.length >= 6;
+            const matchMet = newPassword === confirmPassword && confirmPassword.length > 0;
+            
+            document.getElementById('req-length').classList.toggle('met', lengthMet);
+            document.getElementById('req-match').classList.toggle('met', matchMet);
+        }
+
+        function clearPasswordForm() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            checkPasswordRequirements();
+        }
+
+        function savePassword() {
+            const current = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+
+            if (!current || !newPass || !confirm) {
+                showAlert('All fields are required', 'warning');
+                return;
+            }
+
+            if (newPass !== confirm) {
+                showAlert('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                showAlert('Password must be at least 6 characters', 'warning');
+                return;
+            }
+
+            const btn = event.target;
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="spinner"></span> Updating...';
+
+            fetch(`/api/profile/${currentUserId}/password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    current_password: current,
+                    new_password: newPass,
+                    confirm_password: confirm
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Password updated successfully', 'success');
+                    clearPasswordForm();
+                } else {
+                    showAlert(data.message || 'Failed to update password', 'error');
+                }
+            })
+            .catch(err => showAlert('Error updating password', 'error'))
+            .finally(() => {
+                btn.classList.remove('loading');
+                btn.innerHTML = '🔐 Update Password';
+            });
+        }
+
+        function triggerPhotoUpload() {
+            document.getElementById('photoInput').click();
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                showAlert('File too large. Maximum 5MB', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('profile_photo', file);
+
+            const photoContainer = document.getElementById('profilePhotoContainer');
+            photoContainer.classList.add('loading');
+
+            fetch(`/api/profile/${currentUserId}/photo`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentProfile.profile_photo = data.photo_url;
+                    displayProfile();
+                    showAlert('Profile photo updated successfully', 'success');
+                } else {
+                    showAlert(data.message || 'Failed to upload photo', 'error');
+                }
+            })
+            .catch(err => showAlert('Error uploading photo', 'error'))
+            .finally(() => {
+                photoContainer.classList.remove('loading');
+                document.getElementById('photoInput').value = '';
+            });
+        }
+
+        function deleteProfilePhoto() {
+            if (!currentProfile.profile_photo) {
+                showAlert('No profile photo to delete', 'warning');
+                return;
+            }
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+        }
+
+        function confirmDeletePhoto() {
+            closeConfirmModal();
+            const photoContainer = document.getElementById('profilePhotoContainer');
+            photoContainer.classList.add('loading');
+
+            fetch(`/api/profile/${currentUserId}/photo`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentProfile.profile_photo = null;
+                    displayProfile();
+                    showAlert('Profile photo deleted successfully', 'success');
+                } else {
+                    showAlert(data.message || 'Failed to delete photo', 'error');
+                }
+            })
+            .catch(err => showAlert('Error deleting photo', 'error'))
+            .finally(() => {
+                photoContainer.classList.remove('loading');
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('confirmModal').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirmModal();
+        });
+    </script>
+</body>
+</html>

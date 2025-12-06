@@ -1,0 +1,1121 @@
+<!-- lr_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Viral Shorts &amp; Reels Performance Analyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at top left, #fef4ff 0%, #f0f7ff 40%, #ffeaf0 80%);
+      --card-bg: rgba(255, 255, 255, 0.18);
+      --card-border: rgba(255, 255, 255, 0.35);
+      --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.18);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-red: #ef4444;
+      --accent-blue: #3b82f6;
+      --accent-purple: #6366f1;
+      --accent-pink: #ec4899;
+      --radius-xl: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: linear-gradient(120deg, rgba(248, 250, 252, 0.85), rgba(239, 246, 255, 0.75));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .top-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #scenarioTitle {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #0f172a;
+    }
+
+    .top-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease, opacity 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ef4444, #3b82f6);
+      color: white;
+      box-shadow: 0 10px 24px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(59, 130, 246, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.9);
+      color: #0f172a;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+    }
+
+    .btn-icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .dashboard-container {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+      padding: 18px 24px 24px;
+    }
+
+    .filters-panel {
+      flex: 0 0 260px;
+      max-width: 320px;
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 16px 18px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .filters-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .filters-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .filters-reset {
+      font-size: 0.75rem;
+      color: var(--accent-blue);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.8rem;
+    }
+
+    .filter-label {
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    .filter-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .filter-input,
+    .filter-select {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      background: rgba(248, 250, 252, 0.9);
+      outline: none;
+      color: #0f172a;
+    }
+
+    .filter-select {
+      border-radius: 12px;
+      padding-right: 26px;
+    }
+
+    .main-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .kpi-card {
+      position: relative;
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      padding: 14px 14px 12px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #020617;
+      margin-bottom: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-accent-pill {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(59, 130, 246, 0.9));
+      color: white;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 280px;
+      gap: 16px;
+    }
+
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 10px 10px 6px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 6px 6px;
+    }
+
+    .chart-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .chart-subtitle {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .chart-body {
+      flex: 1;
+      position: relative;
+    }
+
+    .chart-body canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .status-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-container {
+        flex-direction: column;
+      }
+      .filters-panel {
+        flex: none;
+        max-width: 100%;
+        order: 1;
+      }
+      .main-panel {
+        order: 2;
+      }
+      .kpi-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .charts-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 260px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .dashboard-container {
+        padding: 14px;
+      }
+      .kpi-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-title">
+      <span id="scenarioTitle">Scenario - Viral Shorts &amp; Reels Performance Analyzer</span>
+      <span class="top-subtitle">Real-time performance insights for short-form video content</span>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-secondary" onclick="backToMenu()">
+        <span class="btn-icon">&#8592;</span>
+        <span>Back to Menu</span>
+      </button>
+      <button class="btn btn-primary" onclick="logoutFromDashboard()">
+        <span>Logout</span>
+        <span class="btn-icon">&#x1F511;</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    <aside class="filters-panel">
+      <div class="filters-header">
+        <div class="filters-title">Filters</div>
+        <button class="filters-reset" type="button" onclick="resetFilters()">Reset</button>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterNiche">Niche</label>
+        <select id="filterNiche" class="filter-select">
+          <option value="all">All Niches</option>
+        </select>
+        <span class="filter-hint">Filter by content category</span>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterMusicType">Music Type</label>
+        <select id="filterMusicType" class="filter-select">
+          <option value="all">All Music Types</option>
+        </select>
+        <span class="filter-hint">Trending track vs original audio</span>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterDuration">Duration Range (seconds)</label>
+        <select id="filterDuration" class="filter-select">
+          <option value="all">All Durations</option>
+          <option value="0-10">0–10s</option>
+          <option value="11-20">11–20s</option>
+          <option value="21-30">21–30s</option>
+          <option value="31-45">31+s</option>
+        </select>
+        <span class="filter-hint">Analyze videos by length bucket</span>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="filterUploadMonth">Upload Month</label>
+        <select id="filterUploadMonth" class="filter-select">
+          <option value="all">All Months</option>
+        </select>
+        <span class="filter-hint">Derived from upload date</span>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Filtered Data</span>
+        <span id="filterStats" class="filter-hint status-text">0 of 0 videos selected</span>
+      </div>
+    </aside>
+
+    <section class="main-panel">
+      <section class="kpi-row" id="kpiContainer">
+        <!-- KPI cards rendered by JS -->
+      </section>
+
+      <section class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Viral Hit % by Niche</div>
+              <div class="chart-subtitle">How different niches go viral</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="niche_viral_rate_bar"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Retention Distribution</div>
+              <div class="chart-subtitle">Histogram of watch-time retention</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="retention_distribution_hist"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Views vs Hook Strength</div>
+              <div class="chart-subtitle">Impact of hooks across music types</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="views_vs_hook_scatter"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Avg Retention by Duration</div>
+              <div class="chart-subtitle">Optimal video length for retention</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas id="duration_retention_line"></canvas>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="chart.umd.min.js"></script>
+  <script>
+    function backToMenu() {
+      window.location.href = "index.html";
+    }
+
+    function logoutFromDashboard() {
+      localStorage.clear();
+      fetch("/api/logout", { method: "POST" }).finally(function () {
+        window.location.href = "index.html";
+      });
+    }
+
+    const sidStr = localStorage.getItem("currentScenarioIdForDashboard");
+    const scenarioId = sidStr ? parseInt(sidStr, 10) : null;
+
+    (function initScenarioTitle() {
+      const titleEl = document.getElementById("scenarioTitle");
+      try {
+        if (scenarioId != null) {
+          const metaStr = localStorage.getItem("scenarioMeta_" + scenarioId);
+          if (metaStr) {
+            const meta = JSON.parse(metaStr);
+            titleEl.textContent = (meta.scenario_code + " - " + meta.name);
+          }
+        }
+      } catch (e) {
+        console.error("Error reading scenario metadata:", e);
+      }
+    })();
+
+    let allAccounts = [];
+    let filteredAccounts = [];
+    let charts = {
+      nicheViralRate: null,
+      retentionHist: null,
+      viewsHookScatter: null,
+      durationRetentionLine: null
+    };
+
+    function formatMonthLabel(monthKey) {
+      // monthKey expected "YYYY-MM"
+      if (!monthKey || monthKey.length !== 7) return monthKey || "";
+      const year = monthKey.slice(0, 4);
+      const month = monthKey.slice(5, 7);
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const idx = parseInt(month, 10) - 1;
+      const mn = monthNames[idx] || month;
+      return mn + " " + year;
+    }
+
+    function getDurationBucketId(durationSec) {
+      if (durationSec == null || isNaN(durationSec)) return "unknown";
+      if (durationSec <= 10) return "0-10";
+      if (durationSec <= 20) return "11-20";
+      if (durationSec <= 30) return "21-30";
+      return "31-45";
+    }
+
+    function getDurationBucketLabel(bucketId) {
+      switch (bucketId) {
+        case "0-10": return "0–10s";
+        case "11-20": return "11–20s";
+        case "21-30": return "21–30s";
+        case "31-45": return "31–45s";
+        default: return "Unknown";
+      }
+    }
+
+    function normalizeAccounts(rawAccounts) {
+      return rawAccounts.map(function (rec) {
+        var duration = Number(rec.duration_sec);
+        if (!isFinite(duration) || duration < 0) duration = null;
+
+        var retention = Number(rec.retention_rate);
+        if (!isFinite(retention)) retention = null;
+        if (retention != null) {
+          if (retention < 0) retention = 0;
+          if (retention > 1) retention = 1;
+        }
+
+        var retentionPct = retention == null ? null : retention * 100;
+
+        var viewsFirstHour = Number(rec.views_first_hour);
+        if (!isFinite(viewsFirstHour) || viewsFirstHour < 0) viewsFirstHour = null;
+
+        var viewsTotal = Number(rec.views_total);
+        if (!isFinite(viewsTotal) || viewsTotal < 0) viewsTotal = null;
+
+        var hookScore = Number(rec.hook_strength_score);
+        if (!isFinite(hookScore)) hookScore = null;
+        if (hookScore != null) {
+          if (hookScore < 0) hookScore = 0;
+          if (hookScore > 1) hookScore = 1;
+        }
+
+        var uploadTime = (rec.upload_time || "").trim();
+        var uploadMonthKey = "";
+        if (uploadTime.length >= 7) {
+          uploadMonthKey = uploadTime.slice(0, 7); // YYYY-MM
+        }
+
+        var musicType = (rec.music_type || "Unknown").toString().trim() || "Unknown";
+        var niche = (rec.niche || "Unknown").toString().trim() || "Unknown";
+
+        return {
+          videoId: rec.video_id || "",
+          durationSec: duration,
+          hookStrength: hookScore,
+          niche: niche,
+          viewsFirstHour: viewsFirstHour,
+          viewsTotal: viewsTotal,
+          retentionPct: retentionPct,
+          first3SecEngagement: rec.first_3_sec_engagement,
+          musicType: musicType,
+          uploadTime: uploadTime,
+          uploadMonthKey: uploadMonthKey,
+          uploadMonthLabel: uploadMonthKey ? formatMonthLabel(uploadMonthKey) : ""
+        };
+      });
+    }
+
+    function initFiltersFromData(accounts) {
+      var nicheSelect = document.getElementById("filterNiche");
+      var musicSelect = document.getElementById("filterMusicType");
+      var monthSelect = document.getElementById("filterUploadMonth");
+
+      var niches = new Set();
+      var musicTypes = new Set();
+      var months = new Set();
+
+      accounts.forEach(function (a) {
+        if (a.niche) niches.add(a.niche);
+        if (a.musicType) musicTypes.add(a.musicType);
+        if (a.uploadMonthKey) months.add(a.uploadMonthKey);
+      });
+
+      function populateSelect(selectEl, values, formatter) {
+        while (selectEl.options.length > 1) {
+          selectEl.remove(1);
+        }
+        Array.from(values).sort().forEach(function (val) {
+          var opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = formatter ? formatter(val) : val;
+          selectEl.appendChild(opt);
+        });
+      }
+
+      populateSelect(nicheSelect, niches, null);
+      populateSelect(musicSelect, musicTypes, null);
+      populateSelect(monthSelect, months, formatMonthLabel);
+    }
+
+    function resetFilters() {
+      document.getElementById("filterNiche").value = "all";
+      document.getElementById("filterMusicType").value = "all";
+      document.getElementById("filterDuration").value = "all";
+      document.getElementById("filterUploadMonth").value = "all";
+      applyFiltersAndUpdate();
+    }
+
+    function applyFiltersAndUpdate() {
+      var nicheVal = document.getElementById("filterNiche").value || "all";
+      var musicVal = document.getElementById("filterMusicType").value || "all";
+      var durationVal = document.getElementById("filterDuration").value || "all";
+      var monthVal = document.getElementById("filterUploadMonth").value || "all";
+
+      filteredAccounts = allAccounts.filter(function (a) {
+        if (nicheVal !== "all" && a.niche !== nicheVal) return false;
+        if (musicVal !== "all" && a.musicType !== musicVal) return false;
+
+        if (durationVal !== "all") {
+          var bucket = getDurationBucketId(a.durationSec);
+          if (bucket !== durationVal) return false;
+        }
+
+        if (monthVal !== "all" && a.uploadMonthKey !== monthVal) return false;
+
+        return true;
+      });
+
+      var statsEl = document.getElementById("filterStats");
+      statsEl.textContent = filteredAccounts.length + " of " + allAccounts.length + " videos selected";
+
+      updateCharts();
+    }
+
+    function createOrUpdateChart(chartRefName, ctx, config) {
+      if (charts[chartRefName]) {
+        charts[chartRefName].data = config.data;
+        charts[chartRefName].options = config.options || charts[chartRefName].options;
+        charts[chartRefName].update();
+      } else {
+        charts[chartRefName] = new Chart(ctx, config);
+      }
+    }
+
+    function updateCharts() {
+      updateNicheViralRateChart();
+      updateRetentionHistogramChart();
+      updateViewsHookScatterChart();
+      updateDurationRetentionLineChart();
+    }
+
+    function updateNicheViralRateChart() {
+      var map = {};
+      filteredAccounts.forEach(function (a) {
+        var niche = a.niche || "Unknown";
+        if (!map[niche]) {
+          map[niche] = { total: 0, viral: 0 };
+        }
+        map[niche].total += 1;
+        if (a.viewsTotal != null && a.viewsTotal >= 500000) {
+          map[niche].viral += 1;
+        }
+      });
+
+      var rows = Object.keys(map).map(function (niche) {
+        var obj = map[niche];
+        var pct = obj.total > 0 ? (obj.viral / obj.total) * 100 : 0;
+        return { niche: niche, viralPct: pct };
+      });
+
+      rows.sort(function (a, b) {
+        return b.viralPct - a.viralPct;
+      });
+
+      var labels = rows.map(function (r) { return r.niche; });
+      var dataVals = rows.map(function (r) { return Number(r.viralPct.toFixed(2)); });
+
+      var ctx = document.getElementById("niche_viral_rate_bar").getContext("2d");
+
+      var config = {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Viral Hit %",
+            data: dataVals,
+            backgroundColor: "rgba(239, 68, 68, 0.75)",
+            borderColor: "rgba(185, 28, 28, 1)",
+            borderWidth: 1.5,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var niche = context.label;
+                  var val = context.parsed.y;
+                  return "Niche: " + niche + ", Viral %: " + val.toFixed(2) + "%";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#0f172a", font: { size: 10 } },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: "#0f172a",
+                font: { size: 10 },
+                callback: function (val) { return val + "%"; }
+              },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            }
+          }
+        }
+      };
+
+      createOrUpdateChart("nicheViralRate", ctx, config);
+    }
+
+    function updateRetentionHistogramChart() {
+      var binCount = 10;
+      var counts = new Array(binCount).fill(0);
+
+      filteredAccounts.forEach(function (a) {
+        var pct = a.retentionPct;
+        if (pct == null || isNaN(pct)) return;
+        if (pct < 0) pct = 0;
+        if (pct > 100) pct = 100;
+        var binIndex = Math.floor(pct / 10);
+        if (binIndex >= binCount) binIndex = binCount - 1;
+        counts[binIndex] += 1;
+      });
+
+      var labels = [];
+      for (var i = 0; i < binCount; i++) {
+        var start = i * 10;
+        var end = (i + 1) * 10;
+        if (i === binCount - 1) {
+          labels.push(start + "-" + 100 + "%");
+        } else {
+          labels.push(start + "-" + end + "%");
+        }
+      }
+
+      var ctx = document.getElementById("retention_distribution_hist").getContext("2d");
+
+      var config = {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Number of Videos",
+            data: counts,
+            backgroundColor: "rgba(59, 130, 246, 0.75)",
+            borderColor: "rgba(30, 64, 175, 1)",
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var label = context.label;
+                  var val = context.parsed.y;
+                  return "Retention: " + label + ", Count: " + val;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#0f172a", font: { size: 10 } },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: "#0f172a", font: { size: 10 } },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            }
+          }
+        }
+      };
+
+      createOrUpdateChart("retentionHist", ctx, config);
+    }
+
+    function updateViewsHookScatterChart() {
+      var groups = {};
+      filteredAccounts.forEach(function (a) {
+        var x = a.hookStrength;
+        var y = a.viewsTotal;
+        if (x == null || y == null || isNaN(x) || isNaN(y)) return;
+        var mt = a.musicType || "Unknown";
+        if (!groups[mt]) {
+          groups[mt] = [];
+        }
+        groups[mt].push({
+          x: x,
+          y: y,
+          videoId: a.videoId
+        });
+      });
+
+      var palette = [
+        "rgba(239, 68, 68, 0.9)",
+        "rgba(59, 130, 246, 0.9)",
+        "rgba(234, 88, 12, 0.9)",
+        "rgba(16, 185, 129, 0.9)",
+        "rgba(129, 140, 248, 0.9)",
+        "rgba(236, 72, 153, 0.9)"
+      ];
+
+      var borderPalette = [
+        "rgba(185, 28, 28, 1)",
+        "rgba(30, 64, 175, 1)",
+        "rgba(154, 52, 18, 1)",
+        "rgba(4, 120, 87, 1)",
+        "rgba(79, 70, 229, 1)",
+        "rgba(157, 23, 77, 1)"
+      ];
+
+      var datasets = [];
+      var idx = 0;
+      Object.keys(groups).forEach(function (mt) {
+        var colorIdx = idx % palette.length;
+        datasets.push({
+          label: mt,
+          data: groups[mt],
+          showLine: false,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          backgroundColor: palette[colorIdx],
+          borderColor: borderPalette[colorIdx],
+          borderWidth: 1
+        });
+        idx += 1;
+      });
+
+      var ctx = document.getElementById("views_vs_hook_scatter").getContext("2d");
+
+      var config = {
+        type: "scatter",
+        data: { datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: "bottom",
+              labels: { boxWidth: 10, boxHeight: 10, font: { size: 9 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var p = context.raw || {};
+                  var vid = p.videoId || "";
+                  var hook = p.x;
+                  var views = p.y;
+                  return "Video: " + vid +
+                    ", Hook: " + (hook != null ? hook.toFixed(2) : "NA") +
+                    ", Views: " + (views != null ? views.toLocaleString() : "NA");
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "linear",
+              position: "bottom",
+              title: { display: true, text: "Hook Strength Score", color: "#0f172a" },
+              min: 0,
+              max: 1,
+              ticks: { color: "#0f172a", font: { size: 10 } },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            },
+            y: {
+              title: { display: true, text: "Total Views", color: "#0f172a" },
+              ticks: {
+                color: "#0f172a",
+                font: { size: 10 },
+                callback: function (val) {
+                  if (val >= 1_000_000) return (val / 1_000_000) + "M";
+                  if (val >= 1_000) return (val / 1_000) + "k";
+                  return val;
+                }
+              },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            }
+          }
+        }
+      };
+
+      createOrUpdateChart("viewsHookScatter", ctx, config);
+    }
+
+    function updateDurationRetentionLineChart() {
+      var buckets = ["0-10", "11-20", "21-30", "31-45"];
+      var sums = { "0-10": 0, "11-20": 0, "21-30": 0, "31-45": 0 };
+      var counts = { "0-10": 0, "11-20": 0, "21-30": 0, "31-45": 0 };
+
+      filteredAccounts.forEach(function (a) {
+        if (a.retentionPct == null || isNaN(a.retentionPct)) return;
+        var bucketId = getDurationBucketId(a.durationSec);
+        if (!sums.hasOwnProperty(bucketId)) return;
+        sums[bucketId] += a.retentionPct;
+        counts[bucketId] += 1;
+      });
+
+      var labels = buckets.map(getDurationBucketLabel);
+      var dataVals = buckets.map(function (b) {
+        if (counts[b] === 0) return null;
+        var avg = sums[b] / counts[b];
+        return Number(avg.toFixed(2));
+      });
+
+      var ctx = document.getElementById("duration_retention_line").getContext("2d");
+
+      var config = {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Avg Retention %",
+            data: dataVals,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            fill: false,
+            borderColor: "rgba(99, 102, 241, 1)",
+            backgroundColor: "rgba(129, 140, 248, 1)"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var bucketLabel = context.label;
+                  var val = context.parsed.y;
+                  if (val == null) return "No data";
+                  return "Duration: " + bucketLabel + ", Avg Retention: " + val.toFixed(2) + "%";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#0f172a", font: { size: 10 } },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            },
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                color: "#0f172a",
+                font: { size: 10 },
+                callback: function (val) { return val + "%"; }
+              },
+              grid: { color: "rgba(148, 163, 184, 0.3)" }
+            }
+          }
+        }
+      };
+
+      createOrUpdateChart("durationRetentionLine", ctx, config);
+    }
+
+    function renderKeyMetrics(keyMetrics) {
+      var container = document.getElementById("kpiContainer");
+      container.innerHTML = "";
+
+      var cardsConfig = [
+        {
+          key: "Total Videos",
+          label: "Total Videos",
+          sub: "Videos in dataset",
+          accent: "Universe"
+        },
+        {
+          key: "Average Retention Rate (%)",
+          label: "Avg Retention Rate",
+          sub: "Across all videos",
+          accent: "Watch-time"
+        },
+        {
+          key: "Viral Hit Percentage (%)",
+          label: "Viral Hit %",
+          sub: "Videos with ≥ 500k views",
+          accent: "Virality"
+        },
+        {
+          key: "Average First-Hour Views",
+          label: "Avg 1st Hour Views",
+          sub: "Early traction indicator",
+          accent: "Hook Power"
+        }
+      ];
+
+      cardsConfig.forEach(function (cfg) {
+        var value = keyMetrics && keyMetrics.hasOwnProperty(cfg.key)
+          ? keyMetrics[cfg.key]
+          : null;
+
+        var displayValue;
+        if (value == null || value === "") {
+          displayValue = "—";
+        } else if (cfg.key === "Average Retention Rate (%)" || cfg.key === "Viral Hit Percentage (%)") {
+          displayValue = Number(value).toFixed(2) + "%";
+        } else if (cfg.key === "Average First-Hour Views") {
+          displayValue = Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        } else {
+          displayValue = value.toLocaleString ? value.toLocaleString() : String(value);
+        }
+
+        var card = document.createElement("article");
+        card.className = "kpi-card";
+
+        var labelEl = document.createElement("div");
+        labelEl.className = "kpi-label";
+        labelEl.textContent = cfg.label;
+
+        var valEl = document.createElement("div");
+        valEl.className = "kpi-value";
+        valEl.textContent = displayValue;
+
+        var subEl = document.createElement("div");
+        subEl.className = "kpi-sub";
+        subEl.textContent = cfg.sub;
+
+        var accentEl = document.createElement("div");
+        accentEl.className = "kpi-accent-pill";
+        accentEl.textContent = cfg.accent;
+
+        card.appendChild(labelEl);
+        card.appendChild(valEl);
+        card.appendChild(subEl);
+        card.appendChild(accentEl);
+
+        container.appendChild(card);
+      });
+    }
+
+    function initDashboard() {
+      if (scenarioId == null || isNaN(scenarioId)) {
+        console.error("No scenarioId found in localStorage.");
+        return;
+      }
+
+      fetch("/api/scenarios/" + scenarioId + "/analysis/latest")
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          var analysis = res.analysis || {};
+          var keyMetrics = analysis.key_metrics || {};
+          var accountsRaw = analysis.accounts || [];
+
+          allAccounts = normalizeAccounts(accountsRaw);
+          filteredAccounts = allAccounts.slice();
+
+          renderKeyMetrics(keyMetrics);
+          initFiltersFromData(allAccounts);
+          applyFiltersAndUpdate();
+
+          document.getElementById("filterStats").textContent =
+            filteredAccounts.length + " of " + allAccounts.length + " videos selected";
+
+          var nicheSelect = document.getElementById("filterNiche");
+          var musicSelect = document.getElementById("filterMusicType");
+          var durationSelect = document.getElementById("filterDuration");
+          var monthSelect = document.getElementById("filterUploadMonth");
+
+          nicheSelect.addEventListener("change", applyFiltersAndUpdate);
+          musicSelect.addEventListener("change", applyFiltersAndUpdate);
+          durationSelect.addEventListener("change", applyFiltersAndUpdate);
+          monthSelect.addEventListener("change", applyFiltersAndUpdate);
+        })
+        .catch(function (err) {
+          console.error("Error fetching analysis:", err);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", initDashboard);
+  </script>
+</body>
+</html>

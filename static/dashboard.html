@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Credit Card NPA Portfolio Risk Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-main: #f3f6fb;
+      --bg-panel: rgba(255, 255, 255, 0.7);
+      --border-glass: rgba(255, 255, 255, 0.9);
+      --shadow-soft: 0 18px 35px rgba(15, 23, 42, 0.08);
+      --accent-red: #f97373;
+      --accent-blue: #3b82f6;
+      --accent-blue-soft: #e0edff;
+      --text-main: #0f172a;
+      --text-muted: #6b7280;
+      --radius-card: 18px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #ffffff 0%, #f3f6fb 40%, #e4f0ff 100%);
+      color: var(--text-main);
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-radius: var(--radius-card);
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(239, 246, 255, 0.95));
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .scenario-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .scenario-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(248, 113, 113, 0.06), rgba(59, 130, 246, 0.08));
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .top-bar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-primary {
+      border: none;
+      outline: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-pill);
+      background-image: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
+      color: #ffffff;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 12px 25px rgba(59, 130, 246, 0.32);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+      box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--text-main);
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.1s ease, transform 0.1s ease, box-shadow 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .btn-secondary:hover {
+      background: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(148, 163, 184, 0.25);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(260px, 290px) minmax(0, 1fr);
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border-glass);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-subtitle {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .filters-group {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .filter-control {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+    }
+
+    .filter-label {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .filter-select {
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.9);
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--text-main);
+      outline: none;
+      transition: border 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    .filter-select:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+      background: #ffffff;
+    }
+
+    .filter-reset {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .right-panel-content {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .kpi-section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kpi-section-caption {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .kpi-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(224, 237, 255, 0.9));
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::after {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top right, rgba(248, 113, 113, 0.16), transparent 65%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      z-index: 1;
+    }
+
+    .kpi-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      z-index: 1;
+    }
+
+    .kpi-tag {
+      font-size: 0.7rem;
+      color: var(--accent-blue);
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.08);
+      align-self: flex-start;
+      z-index: 1;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: minmax(220px, 1fr);
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chart-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(244, 249, 255, 0.96));
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chart-card::before {
+      content: "";
+      position: absolute;
+      width: 130%;
+      height: 130%;
+      top: -55%;
+      right: -40%;
+      background: radial-gradient(circle at top, rgba(248, 113, 113, 0.12), transparent 60%),
+                  radial-gradient(circle at bottom, rgba(59, 130, 246, 0.12), transparent 60%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chart-title {
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+
+    .chart-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .chart-body {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chart-body canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .status-bar {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .status-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.06);
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      white-space: nowrap;
+    }
+
+    .status-error {
+      color: #b91c1c;
+    }
+
+    @media (max-width: 960px) {
+      .content {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .chart-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .top-bar-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .kpi-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-bar">
+      <div class="scenario-title">
+        <span id="scenarioTitle">Scenario - Credit Card NPA Portfolio Risk</span>
+        <span class="scenario-pill">NPA Portfolio Risk · Credit Cards</span>
+      </div>
+      <div class="top-bar-actions">
+        <button class="btn-secondary" type="button" onclick="backToMenu()">
+          ⬅ Back to Menu
+        </button>
+        <button class="btn-primary" type="button" onclick="logoutFromDashboard()">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- LEFT PANEL: FILTERS -->
+      <aside class="panel">
+        <div class="panel-title">
+          <span>Filters</span>
+          <span class="filter-chip">Affects all charts</span>
+        </div>
+        <div class="panel-subtitle">
+          Refine the portfolio by geography, customer segment, product and NPA status. Charts update instantly.
+        </div>
+        <div class="filters-group">
+          <div class="filter-control">
+            <label class="filter-label" for="filterRegion">Region</label>
+            <select id="filterRegion" class="filter-select">
+              <option value="">All Regions</option>
+            </select>
+          </div>
+
+          <div class="filter-control">
+            <label class="filter-label" for="filterSegment">Segment</label>
+            <select id="filterSegment" class="filter-select">
+              <option value="">All Segments</option>
+            </select>
+          </div>
+
+          <div class="filter-control">
+            <label class="filter-label" for="filterProduct">Product</label>
+            <select id="filterProduct" class="filter-select">
+              <option value="">All Products</option>
+            </select>
+          </div>
+
+          <div class="filter-control">
+            <label class="filter-label" for="filterNpaStatus">NPA Status</label>
+            <select id="filterNpaStatus" class="filter-select">
+              <option value="All">All</option>
+              <option value="Only NPA">Only NPA</option>
+              <option value="Only Standard">Only Standard</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-reset">
+          <button class="btn-secondary" type="button" id="btnResetFilters">
+            Reset Filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- RIGHT PANEL: KPIs + CHARTS -->
+      <section class="panel">
+        <div class="right-panel-content">
+          <!-- KPIs -->
+          <div>
+            <div class="kpi-section-title">
+              Portfolio Snapshot
+              <span class="kpi-tag">Overall · From server</span>
+            </div>
+            <div class="kpi-section-caption">
+              Key metrics for the full uploaded portfolio. Filters below do not change these values.
+            </div>
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Total Outstanding</div>
+                <div class="kpi-value" id="kpiTotalOutstanding">–</div>
+                <div class="kpi-tag">₹ Cr</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">NPA Outstanding</div>
+                <div class="kpi-value" id="kpiNpaOutstanding">–</div>
+                <div class="kpi-tag">₹ Cr</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">NPA Percentage</div>
+                <div class="kpi-value" id="kpiNpaPercentage">–</div>
+                <div class="kpi-tag">% of portfolio</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Number of Accounts</div>
+                <div class="kpi-value" id="kpiNumAccounts">–</div>
+                <div class="kpi-tag">Count</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Number of NPA Accounts</div>
+                <div class="kpi-value" id="kpiNumNpaAccounts">–</div>
+                <div class="kpi-tag">Count</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">90+ DPD Outstanding</div>
+                <div class="kpi-value" id="kpi90PlusOutstanding">–</div>
+                <div class="kpi-tag">₹ Cr</div>
+              </div>
+            </div>
+
+            <div class="kpi-section-title">
+              Filtered View
+              <span class="kpi-tag">Dynamic · Client-side</span>
+            </div>
+            <div class="kpi-section-caption">
+              Recomputed on the filtered subset shown in the charts below.
+            </div>
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Filtered Outstanding</div>
+                <div class="kpi-value" id="kpiFilteredOutstanding">–</div>
+                <div class="kpi-tag">₹ Cr</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Filtered NPA Outstanding</div>
+                <div class="kpi-value" id="kpiFilteredNpaOutstanding">–</div>
+                <div class="kpi-tag">₹ Cr</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Filtered NPA Percentage</div>
+                <div class="kpi-value" id="kpiFilteredNpaPercentage">–</div>
+                <div class="kpi-tag">% of filtered</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHARTS -->
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Region-wise NPA Outstanding</div>
+                  <div class="chart-subtitle">NPA Outstanding by Region · ₹ Cr</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="region_npa_bar"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Segment NPA Share</div>
+                  <div class="chart-subtitle">Share of NPA Outstanding by Segment</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="segment_share_pie"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">DPD Bucket Outstanding</div>
+                  <div class="chart-subtitle">Total Outstanding by DPD Bucket · ₹ Cr</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="dpd_bucket_bar"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <div>
+                  <div class="chart-title">Region-wise NPA Percentage</div>
+                  <div class="chart-subtitle">NPA% = NPA Outstanding / Total Outstanding</div>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="region_npa_percentage_bar"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-bar">
+            <div id="statusSummary" class="status-pill">Ready · Waiting for analysis result</div>
+            <div id="statusError" class="status-error"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="chart.umd.min.js"></script>
+  <script>
+    // Global state
+    let allAccounts = [];
+    let bucketOrder = ["0", "1-30", "31-60", "61-90", "90+"];
+
+    let regionNpaChart = null;
+    let segmentShareChart = null;
+    let dpdBucketChart = null;
+    let regionNpaPctChart = null;
+
+    function backToMenu() {
+      window.location.href = "index.html";
+    }
+
+    function logoutFromDashboard() {
+      localStorage.clear();
+      fetch("/api/logout", { method: "POST" }).finally(function () {
+        window.location.href = "index.html";
+      });
+    }
+
+    function setStatus(message, isError) {
+      var summaryEl = document.getElementById("statusSummary");
+      var errorEl = document.getElementById("statusError");
+      if (isError) {
+        errorEl.textContent = message || "";
+        if (message) {
+          summaryEl.textContent = "Error";
+        }
+      } else {
+        errorEl.textContent = "";
+        if (message) {
+          summaryEl.textContent = message;
+        }
+      }
+    }
+
+    function formatNumber(value, decimals) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return "0.00";
+      }
+      var factor = Math.pow(10, decimals);
+      var v = Math.round(Number(value) * factor) / factor;
+      return v.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    }
+
+    function populateKeyMetrics(keyMetrics) {
+      document.getElementById("kpiTotalOutstanding").textContent =
+        formatNumber(keyMetrics["Total Outstanding (₹ Cr)"], 2);
+      document.getElementById("kpiNpaOutstanding").textContent =
+        formatNumber(keyMetrics["NPA Outstanding (₹ Cr)"], 2);
+      document.getElementById("kpiNpaPercentage").textContent =
+        formatNumber(keyMetrics["NPA Percentage (%)"], 2) + " %";
+      document.getElementById("kpiNumAccounts").textContent =
+        (keyMetrics["Number of Accounts"] || 0).toLocaleString();
+      document.getElementById("kpiNumNpaAccounts").textContent =
+        (keyMetrics["Number of NPA Accounts"] || 0).toLocaleString();
+      document.getElementById("kpi90PlusOutstanding").textContent =
+        formatNumber(keyMetrics["90+ DPD Outstanding (₹ Cr)"], 2);
+    }
+
+    function populateFilterOptions(accounts, analysis) {
+      var regionSelect = document.getElementById("filterRegion");
+      var segmentSelect = document.getElementById("filterSegment");
+      var productSelect = document.getElementById("filterProduct");
+
+      // Clear existing options and re-add defaults
+      regionSelect.innerHTML = '<option value="">All Regions</option>';
+      segmentSelect.innerHTML = '<option value="">All Segments</option>';
+      productSelect.innerHTML = '<option value="">All Products</option>';
+
+      var regions = new Set();
+      var segments = new Set();
+      var products = new Set();
+
+      for (var i = 0; i < accounts.length; i++) {
+        var acc = accounts[i];
+        regions.add(acc.Region || "Unknown");
+        segments.add(acc.Segment || "Unknown");
+        products.add(acc.Product || "Unknown");
+      }
+
+      var regionsArr = Array.from(regions).sort();
+      var segmentsArr = Array.from(segments).sort();
+      var productsArr = Array.from(products).sort();
+
+      regionsArr.forEach(function (r) {
+        var opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        regionSelect.appendChild(opt);
+      });
+
+      segmentsArr.forEach(function (s) {
+        var opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        segmentSelect.appendChild(opt);
+      });
+
+      productsArr.forEach(function (p) {
+        var opt = document.createElement("option");
+        opt.value = p;
+        opt.textContent = p;
+        productSelect.appendChild(opt);
+      });
+
+      if (analysis && analysis.bucket_order && Array.isArray(analysis.bucket_order)) {
+        bucketOrder = analysis.bucket_order.slice();
+      }
+    }
+
+    function getFilteredAccounts() {
+      var regionValue = document.getElementById("filterRegion").value || "";
+      var segmentValue = document.getElementById("filterSegment").value || "";
+      var productValue = document.getElementById("filterProduct").value || "";
+      var npaStatus = document.getElementById("filterNpaStatus").value || "All";
+
+      var filtered = allAccounts.slice();
+
+      if (regionValue) {
+        filtered = filtered.filter(function (acc) {
+          return (acc.Region || "Unknown") === regionValue;
+        });
+      }
+
+      if (segmentValue) {
+        filtered = filtered.filter(function (acc) {
+          return (acc.Segment || "Unknown") === segmentValue;
+        });
+      }
+
+      if (productValue) {
+        filtered = filtered.filter(function (acc) {
+          return (acc.Product || "Unknown") === productValue;
+        });
+      }
+
+      if (npaStatus === "Only NPA") {
+        filtered = filtered.filter(function (acc) {
+          return acc.NPA_Flag === 1;
+        });
+      } else if (npaStatus === "Only Standard") {
+        filtered = filtered.filter(function (acc) {
+          return acc.NPA_Flag === 0;
+        });
+      }
+
+      return filtered;
+    }
+
+    function updateFilteredKpis(filtered) {
+      var totalOutCr = 0;
+      var npaOutCr = 0;
+
+      for (var i = 0; i < filtered.length; i++) {
+        var acc = filtered[i];
+        var outCr = Number(acc.OutstandingCr || 0);
+        totalOutCr += outCr;
+        if (acc.NPA_Flag === 1) {
+          npaOutCr += outCr;
+        }
+      }
+
+      var npaPct = 0;
+      if (totalOutCr > 0) {
+        npaPct = (npaOutCr / totalOutCr) * 100;
+      }
+
+      document.getElementById("kpiFilteredOutstanding").textContent =
+        formatNumber(totalOutCr, 2);
+      document.getElementById("kpiFilteredNpaOutstanding").textContent =
+        formatNumber(npaOutCr, 2);
+      document.getElementById("kpiFilteredNpaPercentage").textContent =
+        formatNumber(npaPct, 2) + " %";
+    }
+
+    function buildRegionNpaChart(filtered) {
+      var ctx = document.getElementById("region_npa_bar").getContext("2d");
+      var regionAgg = {};
+
+      for (var i = 0; i < filtered.length; i++) {
+        var acc = filtered[i];
+        var region = acc.Region || "Unknown";
+        var outCr = Number(acc.OutstandingCr || 0);
+        if (acc.NPA_Flag === 1) {
+          regionAgg[region] = (regionAgg[region] || 0) + outCr;
+        }
+      }
+
+      var entries = Object.entries(regionAgg).map(function (e) {
+        return [e[0], Number(e[1])];
+      });
+
+      entries.sort(function (a, b) {
+        return b[1] - a[1];
+      });
+
+      var labels = entries.map(function (e) { return e[0]; });
+      var data = entries.map(function (e) { return Number(e[1].toFixed(2)); });
+
+      if (regionNpaChart) {
+        regionNpaChart.destroy();
+      }
+
+      regionNpaChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "NPA Outstanding (₹ Cr)",
+            data: data,
+            backgroundColor: "rgba(248, 113, 113, 0.7)",
+            borderColor: "rgba(220, 38, 38, 1)",
+            borderWidth: 1.2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var value = context.parsed.y || 0;
+                  return "NPA Outstanding: " + formatNumber(value, 2) + " Cr";
+                },
+                title: function (items) {
+                  if (items && items.length > 0) {
+                    return "Region: " + items[0].label;
+                  }
+                  return "";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: { size: 11 }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "NPA Outstanding (₹ Cr)"
+              },
+              ticks: {
+                callback: function (value) {
+                  return value;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function buildSegmentShareChart(filtered) {
+      var ctx = document.getElementById("segment_share_pie").getContext("2d");
+      var segmentAgg = {};
+
+      for (var i = 0; i < filtered.length; i++) {
+        var acc = filtered[i];
+        var seg = acc.Segment || "Unknown";
+        var outCr = Number(acc.OutstandingCr || 0);
+        if (acc.NPA_Flag === 1) {
+          segmentAgg[seg] = (segmentAgg[seg] || 0) + outCr;
+        }
+      }
+
+      var labels = [];
+      var data = [];
+      for (var seg in segmentAgg) {
+        if (Object.prototype.hasOwnProperty.call(segmentAgg, seg)) {
+          labels.push(seg);
+          data.push(Number(segmentAgg[seg].toFixed(2)));
+        }
+      }
+
+      var colors = [
+        "rgba(59, 130, 246, 0.9)",
+        "rgba(248, 113, 113, 0.9)",
+        "rgba(96, 165, 250, 0.9)",
+        "rgba(239, 68, 68, 0.9)",
+        "rgba(129, 140, 248, 0.9)",
+        "rgba(56, 189, 248, 0.9)",
+        "rgba(251, 146, 60, 0.9)"
+      ];
+
+      var bgColors = [];
+      var brColors = [];
+      for (var j = 0; j < data.length; j++) {
+        var c = colors[j % colors.length];
+        bgColors.push(c);
+        brColors.push(c.replace("0.9", "1"));
+      }
+
+      if (segmentShareChart) {
+        segmentShareChart.destroy();
+      }
+
+      segmentShareChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: bgColors,
+            borderColor: brColors,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: {
+                boxWidth: 12,
+                font: { size: 11 }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var label = context.label || "";
+                  var value = context.parsed || 0;
+                  return "Segment: " + label + ", NPA Outstanding: " + formatNumber(value, 2) + " Cr";
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function buildDpdBucketChart(filtered) {
+      var ctx = document.getElementById("dpd_bucket_bar").getContext("2d");
+      var bucketAgg = {};
+
+      for (var i = 0; i < filtered.length; i++) {
+        var acc = filtered[i];
+        var bucket = acc.Bucket || "Unknown";
+        var outCr = Number(acc.OutstandingCr || 0);
+        bucketAgg[bucket] = (bucketAgg[bucket] || 0) + outCr;
+      }
+
+      var labels = [];
+      var data = [];
+
+      // Apply preferred order
+      var usedBuckets = new Set();
+      for (var bIndex = 0; bIndex < bucketOrder.length; bIndex++) {
+        var b = bucketOrder[bIndex];
+        if (Object.prototype.hasOwnProperty.call(bucketAgg, b)) {
+          labels.push(b);
+          data.push(Number(bucketAgg[b].toFixed(2)));
+          usedBuckets.add(b);
+        }
+      }
+
+      // Add any remaining buckets not in the order list
+      Object.keys(bucketAgg).sort().forEach(function (b) {
+        if (!usedBuckets.has(b)) {
+          labels.push(b);
+          data.push(Number(bucketAgg[b].toFixed(2)));
+        }
+      });
+
+      if (dpdBucketChart) {
+        dpdBucketChart.destroy();
+      }
+
+      dpdBucketChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Outstanding (₹ Cr)",
+            data: data,
+            backgroundColor: "rgba(59, 130, 246, 0.8)",
+            borderColor: "rgba(37, 99, 235, 1)",
+            borderWidth: 1.2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var value = context.parsed.y || 0;
+                  return "Outstanding: " + formatNumber(value, 2) + " Cr";
+                },
+                title: function (items) {
+                  if (items && items.length > 0) {
+                    return "Bucket: " + items[0].label;
+                  }
+                  return "";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: { size: 11 }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Outstanding (₹ Cr)"
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function buildRegionNpaPercentageChart(filtered) {
+      var ctx = document.getElementById("region_npa_percentage_bar").getContext("2d");
+      var regionTotal = {};
+      var regionNpa = {};
+
+      for (var i = 0; i < filtered.length; i++) {
+        var acc = filtered[i];
+        var region = acc.Region || "Unknown";
+        var outCr = Number(acc.OutstandingCr || 0);
+
+        regionTotal[region] = (regionTotal[region] || 0) + outCr;
+        if (acc.NPA_Flag === 1) {
+          regionNpa[region] = (regionNpa[region] || 0) + outCr;
+        }
+      }
+
+      var labels = [];
+      var data = [];
+      Object.keys(regionTotal).sort().forEach(function (region) {
+        var total = regionTotal[region] || 0;
+        var npa = regionNpa[region] || 0;
+        var pct = 0;
+        if (total > 0) {
+          pct = (npa / total) * 100;
+        }
+        labels.push(region);
+        data.push(Number(pct.toFixed(2)));
+      });
+
+      if (regionNpaPctChart) {
+        regionNpaPctChart.destroy();
+      }
+
+      regionNpaPctChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "NPA Percentage (%)",
+            data: data,
+            backgroundColor: "rgba(96, 165, 250, 0.8)",
+            borderColor: "rgba(37, 99, 235, 1)",
+            borderWidth: 1.2,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var value = context.parsed.y || 0;
+                  return "NPA%: " + formatNumber(value, 2) + " %";
+                },
+                title: function (items) {
+                  if (items && items.length > 0) {
+                    return "Region: " + items[0].label;
+                  }
+                  return "";
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: { size: 11 }
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "NPA Percentage (%)"
+              },
+              min: 0,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    function updateAllCharts() {
+      var filtered = getFilteredAccounts();
+      updateFilteredKpis(filtered);
+      buildRegionNpaChart(filtered);
+      buildSegmentShareChart(filtered);
+      buildDpdBucketChart(filtered);
+      buildRegionNpaPercentageChart(filtered);
+
+      var summary = "Filtered accounts: " + filtered.length.toString();
+      setStatus(summary, false);
+    }
+
+    function resetFilters() {
+      document.getElementById("filterRegion").value = "";
+      document.getElementById("filterSegment").value = "";
+      document.getElementById("filterProduct").value = "";
+      document.getElementById("filterNpaStatus").value = "All";
+      updateAllCharts();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Load scenario meta from localStorage
+      var sidStr = localStorage.getItem("currentScenarioIdForDashboard");
+      var scenarioId = sidStr ? parseInt(sidStr, 10) : null;
+
+      var metaStr = scenarioId != null
+        ? localStorage.getItem("scenarioMeta_" + scenarioId)
+        : null;
+
+      if (metaStr) {
+        try {
+          var meta = JSON.parse(metaStr);
+          document.getElementById("scenarioTitle").textContent =
+            (meta.scenario_code + " - " + meta.name);
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      if (scenarioId == null || isNaN(scenarioId)) {
+        setStatus("Scenario not selected. Go back to menu and re-open.", true);
+        return;
+      }
+
+      setStatus("Loading analysis for scenario #" + scenarioId + "…", false);
+
+      fetch("/api/scenarios/" + scenarioId + "/analysis/latest")
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          var analysis = res && res.analysis ? res.analysis : {};
+          var keyMetrics = analysis.key_metrics || {};
+          allAccounts = analysis.accounts || [];
+          if (analysis.bucket_order && Array.isArray(analysis.bucket_order)) {
+            bucketOrder = analysis.bucket_order.slice();
+          }
+
+          populateKeyMetrics(keyMetrics);
+          populateFilterOptions(allAccounts, analysis);
+          updateAllCharts();
+        })
+        .catch(function (err) {
+          console.error(err);
+          setStatus("Failed to load analysis: " + (err && err.message ? err.message : "Unknown error"), true);
+        });
+
+      document.getElementById("filterRegion").addEventListener("change", updateAllCharts);
+      document.getElementById("filterSegment").addEventListener("change", updateAllCharts);
+      document.getElementById("filterProduct").addEventListener("change", updateAllCharts);
+      document.getElementById("filterNpaStatus").addEventListener("change", updateAllCharts);
+      document.getElementById("btnResetFilters").addEventListener("click", resetFilters);
+    });
+  </script>
+</body>
+</html>

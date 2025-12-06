@@ -1,0 +1,364 @@
+You are helping me build a new “scenario” for my existing Flask-based Scenario Hub application.
+
+IMPORTANT: FOLLOW ALL OF THESE RULES EXACTLY.  
+DO NOT IGNORE ANY PART.  
+DO NOT CHANGE THE OUTPUT ORDER.  
+DO NOT ADD ANY EXPLANATION OUTSIDE THE TWO CODE BLOCKS I REQUEST.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1) PROJECT CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+My Scenario Hub application already works with this architecture:
+
+BACKEND (Flask):
+- Manages scenarios (name, scenario code, linked HTML file, linked Python logic file).
+- Users upload JSON data for a scenario.
+- Backend calls the scenario’s Python module’s `analyze(data)` function.
+- The result is stored.
+- Dashboard fetch URL:
+  GET /api/scenarios/<scenario_id>/analysis/latest  
+  RETURNS:
+  {
+    "success": true/false,
+    "scenario_id": ...,
+    "analysis": { ... }  ← whatever analyze(data) returns
+  }
+
+FRONTEND HUB (index.html):
+- User chooses a scenario → hub saves:
+    - localStorage["currentScenarioIdForDashboard"]
+    - localStorage["scenarioMeta_<id>"] = { scenario_code, name, html_file, analysis_module }
+- Then opens that scenario’s dashboard HTML (the file you will generate).
+
+SCENARIO FILES YOU MUST GENERATE:
+1) logic.py  
+   - Located in: scenario_logic/<scenario_code_folder>/logic.py
+   - Contains analyze(data) and helpers.
+
+2) dashboard.html  
+   - Located in: static/<scenario_code_folder>/dashboard.html  
+   - Pure client-side HTML + JS.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SYSTEM CONSTRAINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ The target machine has NO INTERNET.  
+✘ Do NOT use CDN assets.  
+✔ You MUST include Chart.js locally as:
+
+    <script src="chart.umd.min.js"></script>
+
+✔ Do NOT import pandas, numpy or other external libs. ONLY Python standard library is allowed.
+
+✔ HTML must use a **light theme**, red–blue colour palette, subtle **glassmorphism**.  
+✔ Buttons: pill-shaped, gradient for primary buttons.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2) PYTHON ANALYSIS RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST output a Python file named **logic.py**:
+
+- It must define EXACTLY one public function:
+
+    def analyze(data):
+        ...
+
+- `data` will be a list of dictionaries parsed from the uploaded JSON.
+
+- The function MUST return:
+
+    {
+        "key_metrics": {...},  ← REQUIRED
+        ... other fields ...
+    }
+
+- key_metrics MUST be a dictionary with string keys and number/string values.
+
+- You may include additional fields like:
+    - "accounts"
+    - "aggregates"
+    - "chart_data"
+    etc.
+
+- You may implement helper functions like `_to_float`, `_normalize_str`, etc.
+
+STRICT PYTHON RESTRICTIONS:
+✘ NO file I/O  
+✘ NO test code  
+✘ NO `if __name__ == "__main__":`  
+✘ NO pandas / numpy  
+✔ Only Python standard library  
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3) DASHBOARD HTML RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST output **dashboard.html** with these rules:
+
+1) Include local Chart.js ONLY:
+
+   <script src="chart.umd.min.js"></script>
+
+2) Read scenario id + scenario metadata from localStorage:
+
+   const sidStr = localStorage.getItem("currentScenarioIdForDashboard");
+   const scenarioId = sidStr ? parseInt(sidStr, 10) : null;
+
+   const metaStr = localStorage.getItem("scenarioMeta_" + scenarioId);
+   if (metaStr) {
+     const meta = JSON.parse(metaStr);
+     document.getElementById("scenarioTitle").textContent =
+       (meta.scenario_code + " - " + meta.name);
+   }
+
+3) Fetch analysis JSON:
+
+   fetch("/api/scenarios/" + scenarioId + "/analysis/latest")
+     .then(r => r.json())
+     .then(res => {
+       const analysis = res.analysis || {};
+       // Use analysis.key_metrics, analysis.accounts, etc.
+     })
+
+4) HTML structure:
+
+TOP BAR:
+- Left: Scenario title  
+- Right:
+    - Back to Menu
+    - Logout
+
+Back button:
+function backToMenu() {
+  window.location.href = "index.html";
+}
+
+Logout button:
+function logoutFromDashboard() {
+  localStorage.clear();
+  fetch("/api/logout", { method:"POST" }).finally(() => {
+    window.location.href = "index.html";
+  });
+}
+
+LAYOUT:
+Two columns:
+- Left panel → Filters
+- Right panel → KPIs + Charts
+
+KPI cards (glassmorphism).
+Charts in 2×2 grid.
+
+FILTERS must match exactly what is defined in SCENARIO REQUIREMENTS.
+
+CHARTS must be built using Chart.js.  
+When filters change, JS MUST re-compute chart data using filtered `accounts` array.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4) SCENARIO REQUIREMENTS (FILLED EXAMPLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SCENARIO REQUIREMENTS (FILLED EXAMPLE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1) SCENARIO NAME:
+   Credit Card NPA Portfolio Risk
+
+2) INPUT JSON STRUCTURE:
+   Each record in the uploaded JSON represents a single credit card account snapshot.
+
+   Fields:
+   - Account_ID (str): Unique account identifier.
+   - Customer_ID (str): Unique customer identifier.
+   - Region (str): Geographic region of the account. Example values: "North", "South", "East", "West", "Central".
+   - Segment (str): Customer segment. Example: "Mass", "Affluent", "HNI", "Self-Employed", "Salaried".
+   - Product (str): Credit card product name or variant. Example: "Gold", "Platinum", "Signature".
+   - Limit (float): Sanctioned credit limit in INR.
+   - Outstanding (float): Current outstanding principal + charges in INR.
+   - NPA_Flag (int or bool): 1 if account is NPA (non-performing), 0 if standard.
+   - Days_Past_Due (int): Current days past due.
+   - Bucket (str): DPD bucket label. Example: "0", "1-30", "31-60", "61-90", "90+".
+   - Chargeoff_Flag (int or bool): 1 if written off / charged off, 0 otherwise.
+   - Open_Date (str, dd-mm-YYYY): Date when card was opened.
+   - Snapshot_Date (str, dd-mm-YYYY): Date of this portfolio snapshot.
+
+3) KEY METRICS REQUIRED (exactly what should show in key_metrics dict):
+
+   Please compute and return at least the following 6 metrics:
+
+   - Total Outstanding (₹ Cr):
+     - Definition: Sum of Outstanding for ALL accounts, divided by 1e7 to convert to crore, rounded to 2 decimals.
+
+   - NPA Outstanding (₹ Cr):
+     - Definition: Sum of Outstanding where NPA_Flag = 1, in crore (÷ 1e7), 2 decimals.
+
+   - NPA Percentage (% of Portfolio):
+     - Definition: (NPA Outstanding / Total Outstanding) * 100, rounded to 2 decimals.
+     - If Total Outstanding is 0, return 0.00.
+
+   - Number of Accounts:
+     - Definition: Count of records (len(data)).
+
+   - Number of NPA Accounts:
+     - Definition: Count of records where NPA_Flag = 1.
+
+   - 90+ DPD Outstanding (₹ Cr):
+     - Definition: Sum of Outstanding where Days_Past_Due >= 90, in crore (÷ 1e7), 2 decimals.
+
+   Please use these exact keys in the key_metrics dict:
+   - "Total Outstanding (₹ Cr)"
+   - "NPA Outstanding (₹ Cr)"
+   - "NPA Percentage (%)"
+   - "Number of Accounts"
+   - "Number of NPA Accounts"
+   - "90+ DPD Outstanding (₹ Cr)"
+
+4) FILTERS REQUIRED (for the dashboard HTML):
+
+   The dashboard should support the following filters. Filters should be applied client-side in JavaScript on the analysis result (i.e., you can return pre-aggregated structures that still contain enough detail to re-filter, or you can return a cleaned list of accounts).
+
+   Filter 1:
+   - Name: Region
+   - Type: dropdown, multi-select (but you can implement as single-select for simplicity if needed).
+   - Source: unique values from Region field.
+   - Default: "All Regions".
+   - Affects: ALL charts and the aggregates they show.
+
+   Filter 2:
+   - Name: Segment
+   - Type: dropdown, single-select.
+   - Source: unique values from Segment field, plus "All Segments".
+   - Default: "All Segments".
+   - Affects: ALL charts.
+
+   Filter 3:
+   - Name: Product
+   - Type: dropdown, single-select.
+   - Source: unique values from Product field, plus "All Products".
+   - Default: "All Products".
+   - Affects: ALL charts.
+
+   Filter 4:
+   - Name: NPA Status
+   - Type: dropdown.
+   - Values: "All", "Only NPA", "Only Standard".
+   - Logic:
+     - "All": no filter on NPA_Flag.
+     - "Only NPA": NPA_Flag = 1.
+     - "Only Standard": NPA_Flag = 0.
+   - Affects: ALL charts.
+
+   Implementation hint:
+   - In the HTML, it is acceptable to:
+     - Return a cleaned list of accounts from analyze(data),
+     - Store it in a global JS variable (e.g., accounts[]),
+     - On filter change, filter that array and recompute chart data in JS.
+
+5) CHARTS REQUIRED (define each chart clearly):
+
+   Chart 1:
+   - Chart ID: region_npa_bar
+   - Type: bar
+   - Data source (after filters):
+     - Group accounts by Region.
+     - For each Region, calculate:
+       - Total Outstanding (₹ Cr)
+       - NPA Outstanding (₹ Cr).
+     - For this chart, plot NPA Outstanding.
+   - X-axis: Region (category).
+   - Y-axis: NPA Outstanding in ₹ Cr.
+   - Scale & rounding:
+     - NPA Outstanding = sum(Outstanding of NPA_Flag=1) / 1e7, 2 decimals.
+   - Sorting:
+     - Sort bars descending by NPA Outstanding.
+   - Tooltip:
+     - On hover show: "Region: {Region}, NPA Outstanding: {value} Cr".
+
+   Chart 2:
+   - Chart ID: segment_share_pie
+   - Type: pie
+   - Data source (after filters):
+     - Group accounts by Segment.
+     - For each Segment, compute NPA Outstanding (₹ Cr).
+   - Labels: Segment.
+   - Values: NPA Outstanding (₹ Cr).
+   - Tooltip:
+     - "Segment: {Segment}, NPA Outstanding: {value} Cr".
+
+   Chart 3:
+   - Chart ID: dpd_bucket_bar
+   - Type: bar
+   - Data source (after filters):
+     - Group accounts by DPD Bucket (Bucket field).
+     - For each Bucket, compute Total Outstanding (₹ Cr).
+   - X-axis: Bucket (e.g., "0", "1-30", "31-60", "61-90", "90+").
+   - Y-axis: Total Outstanding (₹ Cr).
+   - Scale:
+     - Outstanding / 1e7, 2 decimals.
+   - Bucket order:
+     - Force this order if present: "0", "1-30", "31-60", "61-90", "90+".
+   - Tooltip:
+     - "Bucket: {Bucket}, Outstanding: {value} Cr".
+
+   Chart 4 (optional if you want to implement):
+   - Chart ID: region_npa_percentage_bar
+   - Type: bar
+   - Data source (after filters):
+     - For each Region:
+       - NPA Outstanding (₹ Cr)
+       - Total Outstanding (₹ Cr)
+       - NPA% = (NPA Outstanding / Total Outstanding) * 100.
+   - X-axis: Region.
+   - Y-axis: NPA Percentage (%).
+   - Scale:
+     - 0–100%, 2 decimals.
+   - Tooltip:
+     - "Region: {Region}, NPA%: {value}%".
+
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+6) SPECIAL RULES AND FORMATTING:
+
+   - Currency:
+     - All rupee amounts shown in KPIs and charts should be in ₹ Cr.
+     - Convert by dividing raw INR values by 1e7 and round to 2 decimal places.
+
+   - Date handling:
+     - For this scenario, no time-series chart is mandatory.
+     - If you need to sort by date anywhere, parse Snapshot_Date (dd-mm-YYYY) and sort ascending.
+
+   - Null / missing handling:
+     - If Outstanding or Limit is missing or null, treat as 0.
+     - If Region / Segment / Product / Bucket is missing, treat as "Unknown".
+     - If NPA_Flag is missing, treat as 0 (Standard).
+
+   - Key metrics vs filtered view:
+     - key_metrics should reflect the metrics for the **entire dataset** (before filters).
+     - Charts and any on-screen recalculations should respond to filters.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5) YOUR OUTPUT FORMAT (STRICT)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST respond with EXACTLY TWO code blocks — nothing else:
+The Graphs should perfectly aligned with the cards
+
+FIRST CODE BLOCK:
+```python
+# logic.py
+# full python file here
+
+SECOND CODE BLOCK
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html>...</html>
+
+DO NOT SEND ANY OTHER TEXT OUTSIDE THESE TWO BLOCKS.
+DO NOT EXPLAIN ANYTHING.
+ONLY SEND THE TWO FILES.
